@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SeatPlan - Seating Grid</title>
+</head>
+<body>
+
+<a href="index.html">&larr; Back to Dashboard</a>
+<h1>Seating Allocation Generator</h1>
+
+<div>
+    <h2>Generate Plan</h2>
+    <input type="text" id="targetHall" placeholder="Enter Hall Name (e.g. LH-101)">
+    <button onclick="generateSeating()">Generate Seating Plan</button>
+</div>
+
+<h2>Seating Matrix Grid</h2>
+<div id="seatingGrid"></div>
+
+<script>
+    async function generateSeating() {
+        const hallName = document.getElementById('targetHall').value;
+
+        const response = await fetch(`/api/seating/generate/${hallName}`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            const seatingList = await response.json();
+            renderGrid(seatingList);
+        } else {
+            alert('Failed to generate seating arrangement. Ensure hall exists!');
+        }
+    }
+
+    function renderGrid(seatingList) {
+        const gridContainer = document.getElementById('seatingGrid');
+        gridContainer.innerHTML = '';
+
+        if (seatingList.length === 0) {
+            gridContainer.innerHTML = '<p>No seats assigned.</p>';
+            return;
+        }
+
+        let table = document.createElement('table');
+        table.setAttribute('border', '1');
+
+        let maxRows = 0;
+        let maxCols = 0;
+        seatingList.forEach(seat => {
+            if (seat.rowNo > maxRows) maxRows = seat.rowNo;
+            if (seat.colNo > maxCols) maxCols = seat.colNo;
+        });
+
+        for (let r = 0; r <= maxRows; r++) {
+            let tr = document.createElement('tr');
+            for (let c = 0; c <= maxCols; c++) {
+                let td = document.createElement('td');
+                let seat = seatingList.find(s => s.rowNo === r && s.colNo === c);
+                if (seat) {
+                    td.innerHTML = `
+                            <div><strong>${seat.studentName}</strong></div>
+                            <div>Group: ${seat.classGroup}</div>
+                            <div>Dept: ${seat.department}</div>
+                            <div>Reg: ${seat.studentRegisterNo}</div>
+                        `;
+                } else {
+                    td.innerHTML = 'Empty';
+                }
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        }
+
+        gridContainer.appendChild(table);
+    }
+</script>
+</body>
+</html>

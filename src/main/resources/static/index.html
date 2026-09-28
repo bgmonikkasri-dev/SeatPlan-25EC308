@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SeatPlan - Management Dashboard</title>
+</head>
+<body>
+
+<h1>SeatPlan - Data Management</h1>
+<a href="seating.html">Go to Seating Arrangement Generator &rarr;</a>
+<br><br>
+
+<div>
+    <h2>Add Student</h2>
+    <input type="text" id="regNo" placeholder="Register No (e.g. 101)">
+    <input type="text" id="stuName" placeholder="Student Name">
+    <input type="text" id="dept" placeholder="Department (e.g. CSE)">
+    <input type="text" id="sec" placeholder="Section (e.g. A)">
+    <input type="text" id="classGroup" placeholder="Class Group (e.g. CSE-A)">
+    <button onclick="addStudent()">Save Student</button>
+</div>
+
+<div>
+    <h2>Add Exam Hall</h2>
+    <input type="text" id="hallName" placeholder="Hall Name (e.g. LH-101)">
+    <input type="number" id="capacity" placeholder="Capacity (e.g. 30)">
+    <input type="number" id="rows" placeholder="Rows (e.g. 5)">
+    <input type="number" id="cols" placeholder="Columns (e.g. 6)">
+    <button onclick="addHall()">Save Exam Hall</button>
+</div>
+
+<script>
+    async function addStudent() {
+        const student = {
+            registerNo: document.getElementById('regNo').value,
+            name: document.getElementById('stuName').value,
+            department: document.getElementById('dept').value,
+            section: document.getElementById('sec').value,
+            classGroup: document.getElementById('classGroup').value
+        };
+
+        const response = await fetch('/api/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(student)
+        });
+
+        if (response.ok) {
+            alert('Student saved successfully!');
+        } else {
+            alert('Failed to save student.');
+        }
+    }
+
+    async function addHall() {
+        const hall = {
+            hallName: document.getElementById('hallName').value,
+            capacity: parseInt(document.getElementById('capacity').value),
+            rowsCount: parseInt(document.getElementById('rows').value),
+            colsCount: parseInt(document.getElementById('cols').value)
+        };
+
+        const response = await fetch('/api/halls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(hall)
+        });
+
+        if (response.ok) {
+            alert('Exam hall saved successfully!');
+        } else {
+            alert('Failed to save exam hall.');
+        }
+    }
+</script>
+</body>
+</html>
