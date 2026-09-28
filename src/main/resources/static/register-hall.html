@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Register Hall</title>
+</head>
+
+<body>
+
+<a href="index.html">Back</a>
+
+<h1>Register Exam Hall</h1>
+
+<input id="hallName" placeholder="Hall Name">
+<br><br>
+
+<input id="capacity" type="number" placeholder="Capacity">
+<br><br>
+
+<input id="rows" type="number" placeholder="Rows">
+<br><br>
+
+<input id="cols" type="number" placeholder="Columns">
+<br><br>
+
+<button onclick="saveHall()">Save Hall</button>
+
+<script>
+
+async function saveHall() {
+
+    const hall = {
+        hallName: document.getElementById("hallName").value,
+        capacity: Number(document.getElementById("capacity").value),
+        rowsCount: Number(document.getElementById("rows").value),
+        colsCount: Number(document.getElementById("cols").value)
+    };
+
+    const response = await fetch("/api/halls", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(hall)
+    });
+
+    if (response.ok) {
+        alert("Hall registered successfully");
+    } else {
+        alert(await response.text());
+    }
+}
+
+</script>
+
+</body>
+</html>

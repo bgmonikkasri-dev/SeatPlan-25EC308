@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student Seat Lookup</title>
+</head>
+
+<body>
+
+<a href="index.html">Back</a>
+
+<h1>Student Seat Lookup</h1>
+
+<input id="registerNo"
+       placeholder="Enter Register Number">
+
+<button onclick="findSeat()">
+    Find Seat
+</button>
+
+<div id="result"></div>
+
+<script>
+
+async function findSeat() {
+
+    const registerNo =
+        document.getElementById("registerNo").value;
+
+    const response =
+        await fetch(
+            "/api/seating/student/" + registerNo
+        );
+
+    const result =
+        document.getElementById("result");
+
+    if (!response.ok) {
+
+        result.innerHTML =
+            "<p>" + await response.text() + "</p>";
+
+        return;
+    }
+
+    const seats = await response.json();
+
+    result.innerHTML = "";
+
+    seats.forEach(seat => {
+
+        result.innerHTML +=
+            "<h3>" + seat.studentName + "</h3>" +
+            "<p>Register No: " +
+            seat.studentRegisterNo +
+            "</p>" +
+
+            "<p>Exam: " +
+            seat.examName +
+            "</p>" +
+
+            "<p>Hall: " +
+            seat.hallName +
+            "</p>" +
+
+            "<p>Row: " +
+            (seat.rowNo + 1) +
+            "</p>" +
+
+            "<p>Column: " +
+            (seat.colNo + 1) +
+            "</p>";
+    });
+}
+
+</script>
+
+</body>
+</html>

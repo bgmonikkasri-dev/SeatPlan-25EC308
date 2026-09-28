@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Create Exam Session</title>
+</head>
+
+<body>
+
+<a href="index.html">Back</a>
+
+<h1>Create Exam Session</h1>
+
+<input id="examName" placeholder="Exam Name">
+<br><br>
+
+<input id="examDate" type="date">
+<br><br>
+
+<input id="hallId" type="number" placeholder="Hall ID">
+<br><br>
+
+<button onclick="createExam()">Create Exam</button>
+
+<script>
+
+async function createExam() {
+
+    const session = {
+        examName: document.getElementById("examName").value,
+        examDate: document.getElementById("examDate").value,
+        hall: {
+            id: Number(document.getElementById("hallId").value)
+        }
+    };
+
+    const response = await fetch("/api/examsessions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(session)
+    });
+
+    if (response.ok) {
+
+        const data = await response.json();
+
+        alert("Exam session created. Session ID = " + data.id);
+
+    } else {
+
+        alert(await response.text());
+    }
+}
+
+</script>
+
+</body>
+</html>

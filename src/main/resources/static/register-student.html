@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Register Student</title>
+</head>
+
+<body>
+
+<a href="index.html">Back</a>
+
+<h1>Register Student</h1>
+
+<input id="registerNo" placeholder="Register Number">
+<br><br>
+
+<input id="name" placeholder="Student Name">
+<br><br>
+
+<input id="department" placeholder="Department e.g. CSE">
+<br><br>
+
+<input id="section" placeholder="Section e.g. A">
+<br><br>
+
+<input id="classGroup" placeholder="Class Group e.g. CSE-A">
+<br><br>
+
+<button onclick="saveStudent()">Save Student</button>
+
+<script>
+
+async function saveStudent() {
+
+    const student = {
+        registerNo: document.getElementById("registerNo").value,
+        name: document.getElementById("name").value,
+        department: document.getElementById("department").value,
+        section: document.getElementById("section").value,
+        classGroup: document.getElementById("classGroup").value
+    };
+
+    const response = await fetch("/api/students", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(student)
+    });
+
+    if (response.ok) {
+        alert("Student registered successfully");
+    } else {
+        alert(await response.text());
+    }
+}
+
+</script>
+
+</body>
+</html>
