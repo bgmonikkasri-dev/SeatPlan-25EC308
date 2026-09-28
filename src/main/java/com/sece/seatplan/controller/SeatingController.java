@@ -2,7 +2,6 @@ package com.sece.seatplan.controller;
 
 import com.sece.seatplan.dto.SeatDto;
 import com.sece.seatplan.service.SeatingService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,8 +10,11 @@ import java.util.List;
 @RequestMapping("/api/seating")
 public class SeatingController {
 
-    @Autowired
-    private SeatingService seatingService;
+    private final SeatingService seatingService;
+
+    public SeatingController(SeatingService seatingService) {
+        this.seatingService = seatingService;
+    }
 
     @PostMapping("/generate/{sessionId}")
     public List<SeatDto> generateSeating(

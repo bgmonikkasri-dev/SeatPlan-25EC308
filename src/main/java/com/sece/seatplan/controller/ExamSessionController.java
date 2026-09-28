@@ -2,7 +2,6 @@ package com.sece.seatplan.controller;
 
 import com.sece.seatplan.entity.ExamSession;
 import com.sece.seatplan.service.ExamSessionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,8 +10,11 @@ import java.util.List;
 @RequestMapping("/api/examsessions")
 public class ExamSessionController {
 
-    @Autowired
-    private ExamSessionService examSessionService;
+    private final ExamSessionService examSessionService;
+
+    public ExamSessionController(ExamSessionService examSessionService) {
+        this.examSessionService = examSessionService;
+    }
 
     @PostMapping
     public ExamSession createSession(

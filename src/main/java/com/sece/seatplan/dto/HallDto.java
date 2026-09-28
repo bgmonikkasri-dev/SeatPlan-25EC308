@@ -2,20 +2,27 @@ package com.sece.seatplan.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.AssertTrue;
 
 public class HallDto {
 
-    @NotBlank
+    @NotBlank(message = "Hall name cannot be blank")
     private String hallName;
 
-    @Positive
+    @Positive(message = "Capacity must be greater than 0")
     private int capacity;
 
-    @Positive
+    @Positive(message = "Rows count must be greater than 0")
     private int rowsCount;
 
-    @Positive
+    @Positive(message = "Columns count must be greater than 0")
     private int colsCount;
+
+    // Custom validation rule
+    @AssertTrue(message = "Capacity cannot exceed rows × cols")
+    public boolean isValidCapacity() {
+        return capacity <= rowsCount * colsCount;
+    }
 
     public HallDto() {
     }

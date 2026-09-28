@@ -1,5 +1,6 @@
 package com.sece.seatplan.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -7,19 +8,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "halls")
-public class Hall {
+@Table(name = "students")
+public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String hallName;
-    private int capacity;
-    private int rowsCount;
-    private int colsCount;
+    @Column(unique = true, nullable = false)
+    private String registerNo;
 
-    public Hall() {
+    private String name;
+    private String department;
+    private String section;
+    private String classGroup;
+
+    public Student() {
     }
 
     public Long getId() {
@@ -30,35 +34,43 @@ public class Hall {
         this.id = id;
     }
 
-    public String getHallName() {
-        return hallName;
+    public String getRegisterNo() {
+        return registerNo;
     }
 
-    public void setHallName(String hallName) {
-        this.hallName = hallName;
+    public void setRegisterNo(String registerNo) {
+        this.registerNo = registerNo;
     }
 
-    public int getCapacity() {
-        return capacity;
+    public String getName() {
+        return name;
     }
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getRowsCount() {
-        return rowsCount;
+    public String getDepartment() {
+        return department;
     }
 
-    public void setRowsCount(int rowsCount) {
-        this.rowsCount = rowsCount;
+    public void setDepartment(String department) {
+        this.department = department;
     }
 
-    public int getColsCount() {
-        return colsCount;
+    public String getSection() {
+        return section;
     }
 
-    public void setColsCount(int colsCount) {
-        this.colsCount = colsCount;
+    public void setSection(String section) {
+        this.section = section;
+    }
+
+    public String getClassGroup() {
+        return classGroup;
+    }
+
+    public void setClassGroup(String classGroup) {
+        this.classGroup = classGroup;
     }
 }

@@ -1,80 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>SeatPlan - Seating Grid</title>
+    <title>Generate Seating Plan</title>
 </head>
 <body>
 
-<a href="index.html">&larr; Back to Dashboard</a>
-<h1>Seating Allocation Generator</h1>
+<h1>Generate Seating Arrangement</h1>
 
-<div>
-    <h2>Generate Plan</h2>
-    <input type="text" id="targetHall" placeholder="Enter Hall Name (e.g. LH-101)">
-    <button onclick="generateSeating()">Generate Seating Plan</button>
-</div>
+<a href="index.html">← Back to Home</a>
 
-<h2>Seating Matrix Grid</h2>
+<br><br>
+
+<label>Exam Session ID:</label> <input type="number" id="sessionId">
+
+<button onclick="generateSeating()">Generate Seating Plan</button>
+
+<button onclick="loadSeating()">View Existing</button>
+
+<button onclick="window.print()">Print</button>
+
+<p id="message"></p>
+
+<h2 id="title"></h2>
+
 <div id="seatingGrid"></div>
 
 <script>
-    async function generateSeating() {
-        const hallName = document.getElementById('targetHall').value;
 
-        const response = await fetch(`/api/seating/generate/${hallName}`, {
-            method: 'POST'
-        });
+async function generateSeating() {
 
-        if (response.ok) {
-            const seatingList = await response.json();
-            renderGrid(seatingList);
-        } else {
-            alert('Failed to generate seating arrangement. Ensure hall exists!');
-        }
+    const sessionId = document.getElementById("sessionId").value;
+
+    if (!sessionId) {
+        document.getElementById("message").innerText =
+            "Please enter Exam Session ID.";
+        return;
     }
 
-    function renderGrid(seatingList) {
-        const gridContainer = document.getElementById('seatingGrid');
-        gridContainer.innerHTML = '';
+    const response = await fetch(
+        "/api/seating/generate/" + sessionId,
+        {
+            method: "POST"
+        }
+    );
 
-        if (seatingList.length === 0) {
-            gridContainer.innerHTML = '<p>No seats assigned.</p>';
-            return;
+    await handleResponse(response);
+}
+
+
+async function loadSeating() {
+
+    const sessionId = document.getElementById("sessionId").value;
+
+    if (!sessionId) {
+        document.getElementById("message").innerText =
+            "Please enter Exam Session ID.";
+        return;
+    }
+
+    const response = await fetch(
+        "/api/seating/session/" + sessionId
+    );
+
+    await handleResponse(response);
+}
+
+
+async function handleResponse(response) {
+
+    const message = document.getElementById("message");
+
+    message.innerText = "";
+
+    if (!response.ok) {
+
+        const errorMessage = await response.text();
+
+        message.innerText =
+            "Unable to generate seating plan: " + errorMessage;
+
+        return;
+    }
+
+    const seatingList = await response.json();
+
+    renderGrid(seatingList);
+}
+
+
+function renderGrid(seatingList) {
+
+    const container =
+        document.getElementById("seatingGrid");
+
+    container.innerHTML = "";
+
+    if (seatingList.length === 0) {
+
+        container.innerHTML =
+            "<p>No seats assigned.</p>";
+
+        return;
+    }
+
+    document.getElementById("title").innerText =
+        "Seating Plan - " +
+        seatingList[0].hallName +
+        " - " +
+        seatingList[0].examName;
+
+
+    let maxRow = 0;
+    let maxCol = 0;
+
+    seatingList.forEach(function(seat) {
+
+        if (seat.rowNo > maxRow) {
+            maxRow = seat.rowNo;
         }
 
-        let table = document.createElement('table');
-        table.setAttribute('border', '1');
+        if (seat.colNo > maxCol) {
+            maxCol = seat.colNo;
+        }
 
-        let maxRows = 0;
-        let maxCols = 0;
-        seatingList.forEach(seat => {
-            if (seat.rowNo > maxRows) maxRows = seat.rowNo;
-            if (seat.colNo > maxCols) maxCols = seat.colNo;
-        });
+    });
 
-        for (let r = 0; r <= maxRows; r++) {
-            let tr = document.createElement('tr');
-            for (let c = 0; c <= maxCols; c++) {
-                let td = document.createElement('td');
-                let seat = seatingList.find(s => s.rowNo === r && s.colNo === c);
-                if (seat) {
-                    td.innerHTML = `
-                            <div><strong>${seat.studentName}</strong></div>
-                            <div>Group: ${seat.classGroup}</div>
-                            <div>Dept: ${seat.department}</div>
-                            <div>Reg: ${seat.studentRegisterNo}</div>
-                        `;
-                } else {
-                    td.innerHTML = 'Empty';
-                }
-                tr.appendChild(td);
+
+    const table = document.createElement("table");
+
+    table.border = "1";
+
+
+    for (let r = 0; r <= maxRow; r++) {
+
+        const row = document.createElement("tr");
+
+
+        for (let c = 0; c <= maxCol; c++) {
+
+            const cell = document.createElement("td");
+
+            const seat = seatingList.find(function(s) {
+
+                return s.rowNo === r &&
+                       s.colNo === c;
+
+            });
+
+
+            if (seat) {
+
+                cell.innerHTML =
+                    "<b>Seat " +
+                    (r + 1) +
+                    "-" +
+                    (c + 1) +
+                    "</b><br>" +
+
+                    "Student: " +
+                    seat.studentName +
+                    "<br>" +
+
+                    "Register No: " +
+                    seat.studentRegisterNo +
+                    "<br>" +
+
+                    "Class: " +
+                    seat.classGroup +
+                    "<br>" +
+
+                    "Department: " +
+                    seat.department;
+
+            } else {
+
+                cell.innerHTML = "Empty";
+
             }
-            table.appendChild(tr);
+
+            row.appendChild(cell);
+
         }
 
-        gridContainer.appendChild(table);
+        table.appendChild(row);
+
     }
+
+
+    container.appendChild(table);
+}
+
 </script>
+
 </body>
 </html>

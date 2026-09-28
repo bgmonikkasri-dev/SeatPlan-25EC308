@@ -10,7 +10,6 @@ import com.sece.seatplan.exception.ResourceNotFoundException;
 import com.sece.seatplan.repository.ExamSessionRepository;
 import com.sece.seatplan.repository.SeatRepository;
 import com.sece.seatplan.repository.StudentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,37 +19,54 @@ import java.util.List;
 @Service
 public class SeatingService {
 
-    @Autowired
-    private ExamSessionRepository examSessionRepository;
+    private final ExamSessionRepository examSessionRepository;
+    private final StudentRepository studentRepository;
+    private final SeatRepository seatRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
+    public SeatingService(ExamSessionRepository examSessionRepository,
+                          StudentRepository studentRepository,
+                          SeatRepository seatRepository) {
 
-    @Autowired
-    private SeatRepository seatRepository;
+        this.examSessionRepository = examSessionRepository;
+        this.studentRepository = studentRepository;
+        this.seatRepository = seatRepository;
+    }
 
     @Transactional
     public List<SeatDto> generateSeatingPlan(Long sessionId) {
 
+        // Find exam session
         ExamSession session = examSessionRepository.findById(sessionId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Exam session not found with id: " + sessionId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Exam session not found with id: " + sessionId));
 
+        // Get hall
         Hall hall = session.getHall();
 
+        if (hall == null) {
+            throw new ResourceNotFoundException(
+                    "No hall assigned to this exam session.");
+        }
+
+        // Get all students
         List<Student> students = new ArrayList<>(
                 studentRepository.findAll()
         );
 
-        if (students.size() > hall.getCapacity()) {
-            throw new CapacityExceededException(
-                    "Students (" + students.size() +
-                    ") exceed hall capacity (" + hall.getCapacity() + ")"
-            );
+        if (students.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "No students found for seating allocation.");
         }
 
-        // Delete old seating plan before generating a new one
+        // Check capacity
+        if (students.size() > hall.getCapacity()) {
+            throw new CapacityExceededException(
+                    "Students (" + students.size()
+                            + ") exceed hall capacity ("
+                            + hall.getCapacity() + ")");
+        }
+
+        // Delete previous seating plan
         seatRepository.deleteByExamSession_Id(sessionId);
 
         int rows = hall.getRowsCount();
@@ -58,19 +74,17 @@ public class SeatingService {
 
         Seat[][] grid = new Seat[rows][cols];
 
-        List<SeatDto> result = new ArrayList<>();
+        List<Seat> seats = new ArrayList<>();
 
-        int studentIndex = 0;
-
+        /*
+         * Allocate every student.
+         */
         for (int row = 0; row < rows; row++) {
 
             for (int col = 0; col < cols; col++) {
 
-                if (studentIndex >= students.size()) {
-                    break;
-                }
-
-                if (studentIndex >= hall.getCapacity()) {
+                // Stop when every student has been allocated
+                if (students.isEmpty()) {
                     break;
                 }
 
@@ -81,10 +95,14 @@ public class SeatingService {
                         col
                 );
 
+                /*
+                 * If no suitable candidate is found,
+                 * simply take the first remaining student.
+                 *
+                 * This guarantees that no student is skipped.
+                 */
                 if (student == null) {
-                    throw new IllegalArgumentException(
-                            "Unable to generate a seating plan without placing students from the same class group next to each other"
-                    );
+                    student = students.get(0);
                 }
 
                 Seat seat = new Seat();
@@ -94,26 +112,53 @@ public class SeatingService {
                 seat.setStudent(student);
                 seat.setExamSession(session);
 
-                seatRepository.save(seat);
-
+                // Put seat in grid
                 grid[row][col] = seat;
 
-                result.add(convertToDto(seat));
+                // Add seat to save list
+                seats.add(seat);
 
+                // Remove allocated student
                 students.remove(student);
-
-                studentIndex++;
             }
+        }
+
+        /*
+         * Safety check.
+         *
+         * If students are still remaining, the hall did not
+         * actually have enough usable positions.
+         */
+        if (!students.isEmpty()) {
+            throw new CapacityExceededException(
+                    "Not enough seats available for all students.");
+        }
+
+        /*
+         * Save ALL seats.
+         */
+        List<Seat> savedSeats = seatRepository.saveAll(seats);
+
+        /*
+         * Convert to DTO.
+         */
+        List<SeatDto> result = new ArrayList<>();
+
+        for (Seat seat : savedSeats) {
+            result.add(convertToDto(seat));
         }
 
         return result;
     }
 
-    private Student findBestCandidate(
-            List<Student> students,
-            Seat[][] grid,
-            int row,
-            int col) {
+    /*
+     * Find a student that does not conflict with
+     * the left or top adjacent student.
+     */
+    private Student findBestCandidate(List<Student> students,
+                                      Seat[][] grid,
+                                      int row,
+                                      int col) {
 
         Seat leftSeat = null;
         Seat topSeat = null;
@@ -126,71 +171,95 @@ public class SeatingService {
             topSeat = grid[row - 1][col];
         }
 
-        Student softCandidate = null;
-
+        /*
+         * First try to find a student with no conflict
+         * with either adjacent seat.
+         */
         for (Student student : students) {
 
-            /*
-             * HARD CONSTRAINT
-             *
-             * Same class/section cannot be adjacent.
-             */
-            boolean leftHardValid =
-                    leftSeat == null ||
-                    !leftSeat.getStudent()
-                            .getClassGroup()
-                            .equalsIgnoreCase(student.getClassGroup());
+            boolean leftValid = true;
+            boolean topValid = true;
 
-            boolean topHardValid =
-                    topSeat == null ||
-                    !topSeat.getStudent()
-                            .getClassGroup()
-                            .equalsIgnoreCase(student.getClassGroup());
+            if (leftSeat != null) {
 
-            if (!leftHardValid || !topHardValid) {
-                continue;
+                leftValid = !hasConflict(
+                        student,
+                        leftSeat.getStudent()
+                );
             }
 
-            /*
-             * SOFT CONSTRAINT
-             *
-             * Prefer different departments.
-             *
-             * Example:
-             * CSE -> ECE -> CSE -> ECE
-             */
-            boolean leftSoftValid =
-                    leftSeat == null ||
-                    !leftSeat.getStudent()
-                            .getDepartment()
-                            .equalsIgnoreCase(student.getDepartment());
+            if (topSeat != null) {
 
-            boolean topSoftValid =
-                    topSeat == null ||
-                    !topSeat.getStudent()
-                            .getDepartment()
-                            .equalsIgnoreCase(student.getDepartment());
+                topValid = !hasConflict(
+                        student,
+                        topSeat.getStudent()
+                );
+            }
 
-            if (leftSoftValid && topSoftValid) {
+            if (leftValid && topValid) {
                 return student;
-            }
-
-            /*
-             * Student satisfies the hard rule,
-             * so keep as fallback.
-             */
-            if (softCandidate == null) {
-                softCandidate = student;
             }
         }
 
-        return softCandidate;
+        /*
+         * If no perfect candidate exists, return null.
+         *
+         * The caller will then use the first remaining student.
+         */
+        return null;
     }
 
+    /*
+     * Check whether two students have a conflict.
+     *
+     * Conflict:
+     * 1. Same class + same section
+     * OR
+     * 2. Same department
+     */
+    private boolean hasConflict(Student s1, Student s2) {
+
+        if (s1 == null || s2 == null) {
+            return false;
+        }
+
+        boolean sameClassSection =
+                s1.getClassGroup() != null
+                        && s2.getClassGroup() != null
+                        && s1.getSection() != null
+                        && s2.getSection() != null
+                        && s1.getClassGroup().equalsIgnoreCase(
+                                s2.getClassGroup()
+                        )
+                        && s1.getSection().equalsIgnoreCase(
+                                s2.getSection()
+                        );
+
+        boolean sameDepartment =
+                s1.getDepartment() != null
+                        && s2.getDepartment() != null
+                        && s1.getDepartment().equalsIgnoreCase(
+                                s2.getDepartment()
+                        );
+
+        return sameClassSection || sameDepartment;
+    }
+
+    /*
+     * Get seating plan for an exam session.
+     */
     public List<SeatDto> getSeatingBySession(Long sessionId) {
 
         List<Seat> seats =
                 seatRepository.findByExamSession_Id(sessionId);
+
+        if (seats.isEmpty()) {
+
+            throw new ResourceNotFoundException(
+                    "No seats found for exam session ID: "
+                            + sessionId
+            );
+        }
 
         List<SeatDto> result = new ArrayList<>();
 
@@ -201,12 +270,16 @@ public class SeatingService {
         return result;
     }
 
+    /*
+     * Get seating information for a student.
+     */
     public List<SeatDto> getStudentSeating(String registerNo) {
 
         List<Seat> seats =
                 seatRepository.findByStudent_RegisterNo(registerNo);
 
         if (seats.isEmpty()) {
+
             throw new ResourceNotFoundException(
                     "No seating allocation found for register number: "
                             + registerNo
@@ -222,6 +295,9 @@ public class SeatingService {
         return result;
     }
 
+    /*
+     * Convert Seat entity to SeatDto.
+     */
     private SeatDto convertToDto(Seat seat) {
 
         SeatDto dto = new SeatDto();

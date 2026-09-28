@@ -5,7 +5,6 @@ import com.sece.seatplan.entity.Hall;
 import com.sece.seatplan.exception.ResourceNotFoundException;
 import com.sece.seatplan.repository.ExamSessionRepository;
 import com.sece.seatplan.repository.HallRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,11 +12,14 @@ import java.util.List;
 @Service
 public class ExamSessionService {
 
-    @Autowired
-    private ExamSessionRepository examSessionRepository;
+    private final ExamSessionRepository examSessionRepository;
+    private final HallRepository hallRepository;
 
-    @Autowired
-    private HallRepository hallRepository;
+    public ExamSessionService(ExamSessionRepository examSessionRepository,
+                              HallRepository hallRepository) {
+        this.examSessionRepository = examSessionRepository;
+        this.hallRepository = hallRepository;
+    }
 
     public ExamSession saveSession(ExamSession session) {
 

@@ -4,7 +4,6 @@ import com.sece.seatplan.dto.StudentDto;
 import com.sece.seatplan.entity.Student;
 import com.sece.seatplan.service.StudentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +12,11 @@ import java.util.List;
 @RequestMapping("/api/students")
 public class StudentController {
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
+
+    public StudentController(StudentService studentService) {
+        this.studentService = studentService;
+    }
 
     @PostMapping
     public Student createStudent(

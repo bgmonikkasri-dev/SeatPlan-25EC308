@@ -4,7 +4,6 @@ import com.sece.seatplan.dto.HallDto;
 import com.sece.seatplan.entity.Hall;
 import com.sece.seatplan.service.HallService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +12,11 @@ import java.util.List;
 @RequestMapping("/api/halls")
 public class HallController {
 
-    @Autowired
-    private HallService hallService;
+    private final HallService hallService;
+
+    public HallController(HallService hallService) {
+        this.hallService = hallService;
+    }
 
     @PostMapping
     public Hall createHall(@Valid @RequestBody HallDto dto) {
