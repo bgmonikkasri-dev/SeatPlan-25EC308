@@ -1,8 +1,8 @@
 package com.sece.seatplan.exception;
 
-public class CapacityExceededException extends RuntimeException {
+public class ResourceNotFoundException extends RuntimeException {
 
-    public CapacityExceededException(String message) {
+    public ResourceNotFoundException(String message) {
         super(message);
     }
 }
