@@ -8,25 +8,26 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import java.time.LocalDate;
-
 @Entity
-@Table(name = "exam_sessions")
-public class ExamSession {
+@Table(name = "seats")
+public class Seat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String examName;
-
-    private LocalDate examDate;
+    private int rowNo;
+    private int colNo;
 
     @ManyToOne
-    @JoinColumn(name = "hall_id")
-    private Hall hall;
+    @JoinColumn(name = "student_id")
+    private Student student;
 
-    public ExamSession() {
+    @ManyToOne
+    @JoinColumn(name = "exam_session_id")
+    private ExamSession examSession;
+
+    public Seat() {
     }
 
     public Long getId() {
@@ -37,27 +38,35 @@ public class ExamSession {
         this.id = id;
     }
 
-    public String getExamName() {
-        return examName;
+    public int getRowNo() {
+        return rowNo;
     }
 
-    public void setExamName(String examName) {
-        this.examName = examName;
+    public void setRowNo(int rowNo) {
+        this.rowNo = rowNo;
     }
 
-    public LocalDate getExamDate() {
-        return examDate;
+    public int getColNo() {
+        return colNo;
     }
 
-    public void setExamDate(LocalDate examDate) {
-        this.examDate = examDate;
+    public void setColNo(int colNo) {
+        this.colNo = colNo;
     }
 
-    public Hall getHall() {
-        return hall;
+    public Student getStudent() {
+        return student;
     }
 
-    public void setHall(Hall hall) {
-        this.hall = hall;
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public ExamSession getExamSession() {
+        return examSession;
+    }
+
+    public void setExamSession(ExamSession examSession) {
+        this.examSession = examSession;
     }
 }
