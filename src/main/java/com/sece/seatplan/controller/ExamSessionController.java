@@ -2,6 +2,7 @@ package com.sece.seatplan.controller;
 
 import com.sece.seatplan.entity.ExamSession;
 import com.sece.seatplan.service.ExamSessionService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class ExamSessionController {
 
     @PostMapping
     public ExamSession createSession(
-            @RequestBody ExamSession session) {
+            @Valid @RequestBody ExamSession session) {
 
         return examSessionService.saveSession(session);
     }
@@ -38,7 +39,7 @@ public class ExamSessionController {
     @PutMapping("/{id}")
     public ExamSession updateSession(
             @PathVariable Long id,
-            @RequestBody ExamSession session) {
+            @Valid @RequestBody ExamSession session) {
 
         return examSessionService.updateSession(id, session);
     }
