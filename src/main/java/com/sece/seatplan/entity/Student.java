@@ -7,33 +7,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "students")
-public class Student {
+@Table(name = "halls")
+public class Hall {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String registerNo;
-    private String name;
-    private String department; // e.g., "CSE", "ECE", "MECH"
-    private String section;    // e.g., "A", "B"
-    private String classGroup; // Combined e.g., "CSE-A", "ECE-B"
+    private String hallName;
+    private int capacity;
+    private int rowsCount;
+    private int colsCount;
 
-    // Default Constructor (Required by JPA)
-    public Student() {
+    public Hall() {
     }
 
-    // Parameterized Constructor
-    public Student(String registerNo, String name, String department, String section, String classGroup) {
-        this.registerNo = registerNo;
-        this.name = name;
-        this.department = department;
-        this.section = section;
-        this.classGroup = classGroup;
-    }
-
-    // Explicit Getters and Setters
     public Long getId() {
         return id;
     }
@@ -42,43 +30,35 @@ public class Student {
         this.id = id;
     }
 
-    public String getRegisterNo() {
-        return registerNo;
+    public String getHallName() {
+        return hallName;
     }
 
-    public void setRegisterNo(String registerNo) {
-        this.registerNo = registerNo;
+    public void setHallName(String hallName) {
+        this.hallName = hallName;
     }
 
-    public String getName() {
-        return name;
+    public int getCapacity() {
+        return capacity;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
-    public String getDepartment() {
-        return department;
+    public int getRowsCount() {
+        return rowsCount;
     }
 
-    public void setDepartment(String department) {
-        this.department = department;
+    public void setRowsCount(int rowsCount) {
+        this.rowsCount = rowsCount;
     }
 
-    public String getSection() {
-        return section;
+    public int getColsCount() {
+        return colsCount;
     }
 
-    public void setSection(String section) {
-        this.section = section;
-    }
-
-    public String getClassGroup() {
-        return classGroup;
-    }
-
-    public void setClassGroup(String classGroup) {
-        this.classGroup = classGroup;
+    public void setColsCount(int colsCount) {
+        this.colsCount = colsCount;
     }
 }
